@@ -1,0 +1,22 @@
+services:
+  orderhub-pedido-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orderhub-pedido-service:latest
+    container_name: orderhub-pedido-service
+    depends_on:
+      - orderhub-rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: orderhub-rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    networks:
+      - spring-net
+    ports:
+      - "8081:8080"
+
+networks:
+  spring-net:
+    external: true
