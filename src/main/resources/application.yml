@@ -17,3 +17,7 @@ server:
 cliente:
   service:
     url: http://localhost:8081
+
+produto:
+  service:
+    url: http://localhost:8082
