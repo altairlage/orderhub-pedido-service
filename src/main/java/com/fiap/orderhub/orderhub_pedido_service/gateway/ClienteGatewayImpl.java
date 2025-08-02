@@ -1,4 +1,4 @@
-package com.fiap.orderhub.orderhub_pedido_service.adapters.consumer;
+package com.fiap.orderhub.orderhub_pedido_service.gateway;
 
 import br.com.orderhub.core.domain.entities.Cliente;
 import br.com.orderhub.core.interfaces.IClienteGateway;

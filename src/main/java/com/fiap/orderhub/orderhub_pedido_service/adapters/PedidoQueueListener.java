@@ -1,4 +1,4 @@
-package com.fiap.orderhub.orderhub_pedido_service.configurations;
+package com.fiap.orderhub.orderhub_pedido_service.adapters;
 
 import com.fiap.orderhub.orderhub_pedido_service.dto.PedidoRequestDTO;
 import com.fiap.orderhub.orderhub_pedido_service.usecases.ProcessarPedidosUseCase;

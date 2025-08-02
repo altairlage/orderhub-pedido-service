@@ -1,12 +1,7 @@
 package com.fiap.orderhub.orderhub_pedido_service.usecases;
 
-import com.fiap.orderhub.orderhub_pedido_service.configurations.ClienteClient;
-import com.fiap.orderhub.orderhub_pedido_service.configurations.EstoqueClient;
-import com.fiap.orderhub.orderhub_pedido_service.configurations.PagamentoClient;
-import com.fiap.orderhub.orderhub_pedido_service.configurations.ProdutoClient;
 import com.fiap.orderhub.orderhub_pedido_service.domain.ItemPedido;
 import com.fiap.orderhub.orderhub_pedido_service.domain.Pedido;
-import com.fiap.orderhub.orderhub_pedido_service.domain.PedidoRepository;
 import com.fiap.orderhub.orderhub_pedido_service.domain.Produto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.PedidoRequestDTO;
 import lombok.AllArgsConstructor;
@@ -23,12 +18,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 public class ProcessarPedidosUseCase {
-
-    private final PedidoRepository pedidoRepository;
-    private final ProdutoClient produtoClient;
-    private final ClienteClient clienteClient;
-    private final EstoqueClient estoqueClient;
-    private final PagamentoClient pagamentoClient;
 
     public void executar(PedidoRequestDTO dto) {
 

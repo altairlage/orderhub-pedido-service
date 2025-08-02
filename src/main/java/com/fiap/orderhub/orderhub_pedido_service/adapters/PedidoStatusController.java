@@ -1,4 +1,4 @@
-package com.fiap.orderhub.orderhub_pedido_service.controller;
+package com.fiap.orderhub.orderhub_pedido_service.adapters;
 
 import com.fiap.orderhub.orderhub_pedido_service.usecases.AtualizarStatusPedidoUseCase;
 import org.springframework.http.ResponseEntity;
