@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/pedidos")
 @AllArgsConstructor
-public class PedidoController {
+public class PedidoApiController {
 
     private final AtualizarStatusPedidoUseCase atualizarStatusPedidoUseCase;
 

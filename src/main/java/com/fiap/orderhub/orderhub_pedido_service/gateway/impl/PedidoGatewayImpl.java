@@ -3,6 +3,8 @@ package com.fiap.orderhub.orderhub_pedido_service.gateway.impl;
 import br.com.orderhub.core.domain.entities.Pedido;
 import br.com.orderhub.core.domain.enums.StatusPedido;
 import br.com.orderhub.core.interfaces.IPedidoGateway;
+import com.fiap.orderhub.orderhub_pedido_service.mapper.PedidoEntityMapper;
+import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoEntity;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,9 @@ public class PedidoGatewayImpl implements IPedidoGateway {
 
     @Override
     public Pedido criar(Pedido pedido) {
-        return pedidoRepository.save(pedido);
+        PedidoEntity pedidoEntity = PedidoEntityMapper.domainToEntity(pedido);
+        PedidoEntity savedEntity = pedidoRepository.save(pedidoEntity);
+        return PedidoEntityMapper.entityToDomain(savedEntity);
     }
 
     @Override

@@ -1,15 +1,18 @@
 package com.fiap.orderhub.orderhub_pedido_service.usecases;
 
+import br.com.orderhub.core.controller.EstoqueController;
+import br.com.orderhub.core.controller.PagamentoController;
+import br.com.orderhub.core.controller.PedidoController;
 import br.com.orderhub.core.domain.entities.*;
 import br.com.orderhub.core.domain.enums.StatusPedido;
 import br.com.orderhub.core.domain.presenters.ClientePresenter;
-import br.com.orderhub.core.domain.usecases.clientes.BuscarClientePorId;
-import br.com.orderhub.core.domain.usecases.estoques.BaixarEstoque;
-import br.com.orderhub.core.domain.usecases.pagamentos.GerarOrdemPagamento;
-import br.com.orderhub.core.domain.usecases.pedidos.CriarPedido;
+import br.com.orderhub.core.domain.presenters.PagamentoPresenter;
+import br.com.orderhub.core.domain.presenters.PedidoPresenter;
 import br.com.orderhub.core.dto.clientes.ClienteDTO;
+import br.com.orderhub.core.dto.pagamentos.PagamentoDTO;
 import br.com.orderhub.core.dto.pedidos.CriarPedidoDTO;
 
+import br.com.orderhub.core.dto.pedidos.PedidoDTO;
 import br.com.orderhub.core.interfaces.IPedidoGateway;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,24 +25,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProcessarPedidosUseCase {
 
-    private final CriarPedido criarPedido;
-    private final BuscarClientePorId buscarClientePorId;
-    private final BaixarEstoque baixarEstoque;
-    private final GerarOrdemPagamento gerarOrdemPagamento;
+    private final PedidoController pedidoController;
+    private final EstoqueController estoqueController;
+    private final PagamentoController pagamentoController;
     private final IPedidoGateway pedidoGateway;
 
     public void executar(CriarPedidoDTO dto) {
-        Pedido pedido = criarPedido.run(dto);
-        pedido.getListaQtdProdutos().forEach(item -> {
-            Integer quantidade = (Integer) item.get("quantidade");
-            Long idProduto = (Long) item.get("idProduto");
-            baixarEstoque.executar(idProduto, quantidade);
-        });
+        PedidoDTO pedidoDTO = pedidoController.criarPedido(dto);
+        Pedido pedido = PedidoPresenter.ToDomain(pedidoDTO);
 
+        estoqueController.baixarEstoquePorPedido(pedidoDTO);
         ClienteDTO clienteDTO = ClientePresenter.ToDTO(pedido.getCliente());
 
-        Pagamento pagamento = gerarOrdemPagamento.run(clienteDTO);
-
+        PagamentoDTO pagamentoDTO = pagamentoController.gerarOrdemPagamento(clienteDTO);
+        Pagamento pagamento = PagamentoPresenter.ToDomain(pagamentoDTO);
         pedido.setPagamento(pagamento);
         pedido.setStatus(StatusPedido.ABERTO);
         pedidoGateway.criar(pedido);
