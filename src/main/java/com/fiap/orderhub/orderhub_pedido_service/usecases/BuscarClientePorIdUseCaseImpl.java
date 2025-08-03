@@ -1,11 +1,11 @@
 package com.fiap.orderhub.orderhub_pedido_service.usecases;
 
 import br.com.orderhub.core.domain.entities.Cliente;
+import br.com.orderhub.core.domain.presenters.ClientePresenter;
 import br.com.orderhub.core.domain.usecases.clientes.BuscarClientePorId;
 import br.com.orderhub.core.dto.clientes.ClienteDTO;
 import br.com.orderhub.core.interfaces.IClienteGateway;
 import com.fiap.orderhub.orderhub_pedido_service.exceptions.BuscarClienteException;
-import com.fiap.orderhub.orderhub_pedido_service.mapper.ClienteMapper;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +28,13 @@ public class BuscarClientePorIdUseCaseImpl {
         var clienteEntityOpt = clienteRepository.findById(Long.valueOf(id));
         if (clienteEntityOpt.isPresent()) {
             var cliente = clienteEntityOpt.get();
-            return ClienteMapper.toDto(cliente);
+            return ClientePresenter.ToDTO(cliente);
         }
 
         ClienteDTO clienteDTO = buscarClientePorId.run(Long.valueOf(id));
 
         // 3. Salva localmente
-        Cliente entity = ClienteMapper.toEntity(clienteDTO);
+        Cliente entity = ClientePresenter.ToDomain(clienteDTO);
         clienteRepository.save(entity);
 
         return clienteDTO;

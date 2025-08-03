@@ -15,11 +15,11 @@ public class AtualizarStatusPedidoUseCase {
     }
 
     public void executar(StatusPagamentoRequest request) {
-        Pedido pedidoEntity = pedidoRepository.findById(request.getIdPedido()).orElse(null);
+        Pedido pedidoEntity = pedidoRepository.findById(request.idPedido()).orElse(null);
         if (pedidoEntity == null) {
             throw new RuntimeException("Pedido não encontrado");
         }
-        pedidoEntity.setStatus(StatusPedido.valueOf(request.getNovoStatus().name()));
+        pedidoEntity.setStatus(StatusPedido.valueOf(request.novoStatus().name()));
         pedidoRepository.save(pedidoEntity);
     }
 }
