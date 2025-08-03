@@ -1,6 +1,6 @@
 package com.fiap.orderhub.orderhub_pedido_service.adapters;
 
-import br.com.orderhub.core.dto.pedidos.PedidoDTO;
+import br.com.orderhub.core.dto.pedidos.CriarPedidoDTO;
 import com.fiap.orderhub.orderhub_pedido_service.usecases.ProcessarPedidosUseCase;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class PedidoQueueListener {
     }
 
     @RabbitListener(queues = "orderhub-pedido-queue")
-    public void consumir(PedidoDTO dto) {
+    public void consumir(CriarPedidoDTO dto) {
         useCase.executar(dto);
     }
 }

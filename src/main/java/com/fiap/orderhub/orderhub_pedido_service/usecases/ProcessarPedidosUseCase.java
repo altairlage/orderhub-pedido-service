@@ -1,24 +1,20 @@
 package com.fiap.orderhub.orderhub_pedido_service.usecases;
 
-import br.com.orderhub.core.domain.entities.Cliente;
-import br.com.orderhub.core.domain.entities.Estoque;
-import br.com.orderhub.core.domain.entities.Pedido;
-import br.com.orderhub.core.domain.entities.Produto;
+import br.com.orderhub.core.domain.entities.*;
 import br.com.orderhub.core.domain.enums.StatusPedido;
-import br.com.orderhub.core.dto.clientes.ClienteDTO;
-import br.com.orderhub.core.dto.pedidos.PedidoDTO;
+import br.com.orderhub.core.domain.presenters.ClientePresenter;
 import br.com.orderhub.core.domain.usecases.clientes.BuscarClientePorId;
-import br.com.orderhub.core.exceptions.ClienteNaoEncontradoException;
-import br.com.orderhub.core.exceptions.ProdutoNaoEncontradoException;
-import br.com.orderhub.core.interfaces.*;
+import br.com.orderhub.core.domain.usecases.estoques.BaixarEstoque;
+import br.com.orderhub.core.domain.usecases.pagamentos.GerarOrdemPagamento;
+import br.com.orderhub.core.domain.usecases.pedidos.CriarPedido;
+import br.com.orderhub.core.dto.clientes.ClienteDTO;
+import br.com.orderhub.core.dto.pedidos.CriarPedidoDTO;
 
+import br.com.orderhub.core.interfaces.IPedidoGateway;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -26,38 +22,26 @@ import java.util.stream.Collectors;
 @Service
 public class ProcessarPedidosUseCase {
 
-    private final IProdutoGateway produtoGateway;
-    private final IClienteGateway clienteGateway;
-    private final IEstoqueGateway estoqueGateway;
-    private final IPagamentoGateway pagamentoGateway;
+    private final CriarPedido criarPedido;
+    private final BuscarClientePorId buscarClientePorId;
+    private final BaixarEstoque baixarEstoque;
+    private final GerarOrdemPagamento gerarOrdemPagamento;
     private final IPedidoGateway pedidoGateway;
 
-    public void executar(PedidoDTO dto) {
-        List<Produto> produtos = recuperaProdutos(dto.listaQtdProdutos());
-        Cliente clientes = recuperaCliente(dto.cliente());
-        //Service de estoque - dar baixa no estoque passando a lista de IDs dos produtos
-        recuperaEstoque(produtos.stream().map(Produto::getId).toList());
-        //Service de pagamento - gerar ordem de pagamento com o valor total do pedido
-        //Service de pedido - salvar pedido com status de AGUARDANDO PAGAMENTO e salva no banco de dados
-    }
-    private void recuperaEstoque(List<Long> idsProdutos) {
-        Estoque estoque = estoqueGateway.buscarPorIds(idsProdutos);
-        if (estoque == null || estoque.getProdutos().isEmpty()) {
-            throw new ProdutoNaoEncontradoException("Nenhum produto encontrado no estoque para os IDs fornecidos.");
-        }
-    }
+    public void executar(CriarPedidoDTO dto) {
+        Pedido pedido = criarPedido.run(dto);
+        pedido.getListaQtdProdutos().forEach(item -> {
+            Integer quantidade = (Integer) item.get("quantidade");
+            Long idProduto = (Long) item.get("idProduto");
+            baixarEstoque.executar(idProduto, quantidade);
+        });
 
-    private List<Produto> recuperaProdutos(List<Map<String, Object>> listaQtdProdutos) {
-        List<String> nomes = listaQtdProdutos.stream()
-                .flatMap(item -> item.keySet().stream())
-                .toList();
+        ClienteDTO clienteDTO = ClientePresenter.ToDTO(pedido.getCliente());
 
-        return nomes.stream().map(nome -> {
-            return produtoGateway.buscarPorNome(nome);
-        }).toList();
-    }
+        Pagamento pagamento = gerarOrdemPagamento.run(clienteDTO);
 
-    private Cliente recuperaCliente(ClienteDTO dto) {
-        return clienteGateway.buscarPorId(dto.id());
+        pedido.setPagamento(pagamento);
+        pedido.setStatus(StatusPedido.ABERTO);
+        pedidoGateway.criar(pedido);
     }
 }
