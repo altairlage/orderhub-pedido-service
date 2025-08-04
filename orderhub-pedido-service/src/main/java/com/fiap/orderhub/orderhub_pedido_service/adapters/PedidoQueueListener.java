@@ -16,7 +16,7 @@ public class PedidoQueueListener {
     }
 
     @RabbitListener(queues = "orderhub-pedido-queue")
-    public void consumir(CriarPedidoDTO dto) {
+    public void consumir(CriarPedidoDTO dto) throws Exception {
         useCase.executar(dto);
     }
 }

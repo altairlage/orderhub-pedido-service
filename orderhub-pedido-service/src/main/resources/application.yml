@@ -1,9 +1,9 @@
 spring:
   rabbitmq:
-    host: orderhub-rabbitmq
-    port: 5672
-    username: guest
-    password: guest
+      host: orderhub-rabbitmq
+      port: 5672
+      username: admin
+      password: admin
   application:
     name: orderhub-pedido-service
 
@@ -20,4 +20,4 @@ cliente:
 
 produto:
   service:
-    url: http://localhost:8082
+    url: http://localhost:8086

@@ -7,17 +7,20 @@ import br.com.orderhub.core.domain.enums.StatusPagamento;
 public class PagamentoEntityMapper {
     public static Pagamento entityToDomain(PagamentoEntity pagamentoEntity){
         return new Pagamento(
-            pagamentoEntity.getId(),
-            StatusPagamento.valueOf(pagamentoEntity.getStatusPagamento())
+                pagamentoEntity.getId(),
+                pagamentoEntity.getNomeCliente(),
+                pagamentoEntity.getEmailCliente(),
+                pagamentoEntity.getValorTotalOrdemPagamento(),
+                StatusPagamento.valueOf(pagamentoEntity.getStatusPagamento())
         );
     }
 
     public static PagamentoEntity domainToEntity(Pagamento pagamento){
         return new PagamentoEntity(
                 pagamento.getId(),
-                null, // nomeCliente
-                null, // emailCliente
-                null, // valorTotalOrdemPagamento
+                pagamento.getNomeCliente(),
+                pagamento.getEmailCliente(),
+                pagamento.getValorTotalOrdemPagamento(),
                 pagamento.getStatus().toString()
         );
     }
