@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PedidoControllerConfig {
     @Bean
-    public PedidoController pedidoController(IPedidoGateway pedidoGateway, IClienteGateway clienteGateway, IProdutoGateway produtoGateway){
-        return new PedidoController(pedidoGateway, clienteGateway, produtoGateway);
+    public PedidoController pedidoController(IPedidoGateway pedidoGateway){
+        return new PedidoController(pedidoGateway);
     }
 }

@@ -20,14 +20,9 @@ public class PedidoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idPedido;
-
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "cliente_id")
-    private ClienteEntity cliente;
-
-    @OneToOne(cascade = CascadeType.DETACH)
-    @JoinColumn(name = "pagamento_id")
-    private PagamentoEntity pagamento;
+    @Column(nullable = false)
+    private Long idCliente;
+    private Long IdPagamento;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "pedido_id")
