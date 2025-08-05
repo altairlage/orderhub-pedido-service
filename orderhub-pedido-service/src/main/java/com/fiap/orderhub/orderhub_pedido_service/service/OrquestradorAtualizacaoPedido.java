@@ -9,6 +9,7 @@ import com.fiap.orderhub.orderhub_pedido_service.dto.AtualizacaoStatusPedidoApiR
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiRequestDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiResponseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -19,6 +20,9 @@ import java.util.Map;
 public class OrquestradorAtualizacaoPedido {
 
     private final PedidoController pedidoController;
+
+    @Value("${estoque.service.url}")
+    private String estoqueServiceUrl;
 
     public OrquestradorAtualizacaoPedido(PedidoController pedidoController) {
         this.pedidoController = pedidoController;
@@ -48,7 +52,7 @@ public class OrquestradorAtualizacaoPedido {
     }
 
     private final EstoqueApiResponseDto reporEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(estoqueServiceUrl);
         return webClient.post()
                 .uri("/api/estoques/" + idProduto + "/repor")
                 .bodyValue(estoqueApiRequestDto)

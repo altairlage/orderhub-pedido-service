@@ -15,6 +15,7 @@ import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiRequestDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiResponseDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.ProdutoApiResponseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -24,6 +25,18 @@ import java.util.Map;
 @Service
 public class OrquestradorCriacaoPedido {
     private final PedidoController pedidoController;
+
+    @Value("${estoque.service.url}")
+    private String estoqueServiceUrl;
+
+    @Value("${cliente.service.url}")
+    private String clienteServiceUrl;
+
+    @Value("${pagamento.service.url}")
+    private String pagamentoServiceUrl;
+
+    @Value("${produto.service.url}")
+    private String produtoServiceUrl;
 
     public OrquestradorCriacaoPedido(PedidoController pedidoController) {
         this.pedidoController = pedidoController;
@@ -69,25 +82,25 @@ public class OrquestradorCriacaoPedido {
                 valorTotalPedido,
                 StatusPagamento.EM_ABERTO
         );
-//        PagamentoDTO pagamentoDTO = criarPagamento(criarPagamentoDTO);
-//        if(pagamentoDTO == null) {
-//            throw new OrdemPagamentoNaoEncontradaException("Erro ao gerar ordem de pagamento.");
-//        }
+        PagamentoDTO pagamentoDTO = criarPagamento(criarPagamentoDTO);
+        if(pagamentoDTO == null) {
+            throw new OrdemPagamentoNaoEncontradaException("Erro ao gerar ordem de pagamento.");
+        }
 
-        // Atualiza o pedido no banco de dados para salvar o id do pagamento
-//        PedidoDTO pedidoComPagamento = new PedidoDTO(
-//                pedidoDTO.idPedido(),
-//                clienteApiResponseDto.id(),
-//                pagamentoDTO.id(),
-//                criarPedidoDTO.listaQtdProdutos(),
-//                pedidoDTO.status()
-//        );
-//        pedidoController.editarPedido(pedidoComPagamento);
+//         Atualiza o pedido no banco de dados para salvar o id do pagamento
+        PedidoDTO pedidoComPagamento = new PedidoDTO(
+                pedidoDTO.idPedido(),
+                clienteApiResponseDto.id(),
+                pagamentoDTO.id(),
+                criarPedidoDTO.listaQtdProdutos(),
+                pedidoDTO.status()
+        );
+        pedidoController.editarPedido(pedidoComPagamento);
 
     }
 
     private final EstoqueApiResponseDto baixarEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(estoqueServiceUrl);
         return webClient.post()
                 .uri("/api/estoques/" + idProduto + "/baixar")
                 .bodyValue(estoqueApiRequestDto)
@@ -97,7 +110,7 @@ public class OrquestradorCriacaoPedido {
     }
 
     private final ClienteApiResponseDto getInfoCliente(Long idCliente) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(clienteServiceUrl);
         return webClient.get()
                 .uri("/clientes/id/" + idCliente)
                 .retrieve()
@@ -106,7 +119,7 @@ public class OrquestradorCriacaoPedido {
     }
 
     private final ProdutoApiResponseDto getInfoProduto(Long idProduto) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(produtoServiceUrl);
         return webClient.get()
                 .uri("/produtos/" + idProduto)
                 .retrieve()
@@ -115,7 +128,7 @@ public class OrquestradorCriacaoPedido {
     }
 
     private final PagamentoDTO criarPagamento(CriarPagamentoDTO criarPagamentoDTO) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(pagamentoServiceUrl);
         return webClient.post()
                 .uri("/gerar/")
                 .bodyValue(criarPagamentoDTO)
