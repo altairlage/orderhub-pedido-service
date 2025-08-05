@@ -5,6 +5,7 @@ import br.com.orderhub.core.domain.enums.StatusPedido;
 import br.com.orderhub.core.interfaces.IPedidoGateway;
 import com.fiap.orderhub.orderhub_pedido_service.mapper.PedidoEntityMapper;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoEntity;
+import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoId;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoEntity;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoRepository;
 import lombok.AllArgsConstructor;
@@ -57,7 +58,7 @@ public class PedidoGatewayImpl implements IPedidoGateway {
             Long idProduto = (Long) produto.get("idProduto");
             Integer quantidade = (Integer) produto.get("quantidade");
 
-            itemPedidoEntities.add(new ItemPedidoEntity(idProduto, quantidade));
+            itemPedidoEntities.add(new ItemPedidoEntity(new ItemPedidoId(pedidoAntigo.getIdPedido(), idProduto), quantidade, PedidoEntityMapper.domainToEntity(pedidoAtualizado)));
         }
         entity.setListaQtdProdutos(itemPedidoEntities);
         entity.setStatus(pedidoAtualizado.getStatus());

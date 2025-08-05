@@ -3,6 +3,7 @@ package com.fiap.orderhub.orderhub_pedido_service.mapper;
 import br.com.orderhub.core.domain.entities.Pedido;
 import br.com.orderhub.core.domain.enums.StatusPedido;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoEntity;
+import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoId;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoEntity;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,7 @@ public class PedidoEntityMapper {
     public static List<Map<String, Object>> itemEntityListToMapList(List<ItemPedidoEntity> itens) {
         return itens.stream().map(item -> {
             Map<String, Object> map = new java.util.HashMap<>();
-            map.put("idProduto", item.getIdProduto());
+            map.put("idProduto", item.getId());
             map.put("quantidade", item.getQuantidade());
             return map;
         }).toList();
@@ -23,7 +24,7 @@ public class PedidoEntityMapper {
     public static List<ItemPedidoEntity> mapListToItemEntityList(List<Map<String, Object>> itens) {
         return itens.stream().map(map -> {
             ItemPedidoEntity entity = new ItemPedidoEntity();
-            entity.setIdProduto(Long.parseLong(map.get("idProduto").toString()));
+            entity.setId(new ItemPedidoId());
             entity.setQuantidade((Integer) map.get("quantidade"));
             return entity;
         }).toList();

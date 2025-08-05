@@ -23,8 +23,7 @@ public class PedidoEntity {
     private Long idCliente;
     private Long IdPagamento;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pedido_id")
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedidoEntity> listaQtdProdutos;
 
     private StatusPedido status = null;

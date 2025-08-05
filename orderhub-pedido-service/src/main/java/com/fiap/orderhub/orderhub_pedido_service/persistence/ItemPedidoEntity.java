@@ -11,7 +11,15 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ItemPedidoEntity {
-    @Id
-    private Long idProduto;
+
+    @EmbeddedId
+    private ItemPedidoId id;
+
     private Integer quantidade;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("pedidoId")
+    @JoinColumn(name = "pedido_id")
+    private PedidoEntity pedido;
+
 }
