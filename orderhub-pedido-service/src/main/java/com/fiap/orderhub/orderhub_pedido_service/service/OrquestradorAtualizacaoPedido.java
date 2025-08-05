@@ -28,7 +28,8 @@ public class OrquestradorAtualizacaoPedido {
         this.pedidoController = pedidoController;
     }
 
-    public void atualizarStatusPedido(AtualizacaoStatusPedidoApiRequestDto atualizacaoPeditoApiRequestDto) {
+    public PedidoDTO atualizarStatusPedido(AtualizacaoStatusPedidoApiRequestDto atualizacaoPeditoApiRequestDto) {
+        PedidoDTO response = null;
         if(atualizacaoPeditoApiRequestDto.statusPagamento()== StatusPagamento.FECHADO_FALHA_PAGAMENTO) {
            PedidoDTO pedidoDTO = pedidoController.buscarPedidoPorId(atualizacaoPeditoApiRequestDto.idPedido());
 
@@ -44,11 +45,12 @@ public class OrquestradorAtualizacaoPedido {
                     // aqui poderiamos colocar o produto e quantidade em uma fila ou dead letter queue para ser tentado novamente mais tarde
                 }
             }
-            pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SEM_CREDITO);
+            response = pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SEM_CREDITO);
         } else if(atualizacaoPeditoApiRequestDto.statusPagamento()== StatusPagamento.FECHADO_COM_SUCESSO) {
             PedidoDTO pedidoDTO = pedidoController.buscarPedidoPorId(atualizacaoPeditoApiRequestDto.idPedido());
-            pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SUCESSO);
+            response=  pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SUCESSO);
         }
+        return response;
     }
 
     private final EstoqueApiResponseDto reporEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {

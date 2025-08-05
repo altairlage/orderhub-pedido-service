@@ -20,25 +20,30 @@ import java.util.Optional;
 public class PedidoGatewayImpl implements IPedidoGateway {
 
     private final PedidoRepository pedidoRepository;
-    private final PedidoEntityMapper pedidoEntityMapper;
 
     @Override
     public Pedido buscarPorId(Long idPedido) {
         Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(idPedido.toString());
+        if(optionalPedido.isEmpty()) {
+            return null;
+        }
+
+        PedidoEntity pedidoEntity = optionalPedido.get();
+
         return optionalPedido.map(PedidoEntityMapper::entityToDomain).orElse(null);
     }
 
     @Override
     public List<Pedido> buscarPorIdCliente(Long idCliente) {
         List<PedidoEntity> pedidos = pedidoRepository.findByIdCliente(idCliente);
-        return pedidoEntityMapper.mapListToPedidoList(pedidos);
+        return PedidoEntityMapper.mapListToPedidoList(pedidos);
     }
 
     @Override
     public Pedido criar(Pedido pedido) {
         PedidoEntity pedidoEntity = PedidoEntityMapper.domainToEntity(pedido);
         PedidoEntity savedEntity = pedidoRepository.save(pedidoEntity);
-        return PedidoEntityMapper.entityToDomain(savedEntity);
+        return PedidoEntityMapper.entityToDomainCreation(savedEntity);
     }
 
     @Override
@@ -53,7 +58,7 @@ public class PedidoGatewayImpl implements IPedidoGateway {
         // Constrói nova lista de itens
         List<ItemPedidoEntity> itemPedidoEntities = new ArrayList<>();
         for (Map<String, Object> produto : pedidoAtualizado.getListaQtdProdutos()) {
-            Long idProduto = (Long) produto.get("idProduto");
+            Long idProduto = Long.parseLong(produto.get("idProduto").toString());
             Integer quantidade = (Integer) produto.get("quantidade");
 
             ItemPedidoEntity item = new ItemPedidoEntity();
@@ -92,6 +97,6 @@ public class PedidoGatewayImpl implements IPedidoGateway {
                 .filter(p -> p.getStatus() == StatusPedido.ABERTO)
                 .toList();
 
-        return pedidoEntityMapper.mapListToPedidoList(abertos);
+        return PedidoEntityMapper.mapListToPedidoList(abertos);
     }
 }

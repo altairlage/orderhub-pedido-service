@@ -43,15 +43,21 @@ public class OrquestradorCriacaoPedido {
     }
 
     public void criarPedido(CriarPedidoDTO criarPedidoDTO) {
-        // Pega os dados do cliente pelo cliente-service
+//        PedidoDTO pedidoDTO = pedidoController.criarPedido(criarPedidoDTO);
+//
+//        PedidoDTO pedidoDTO1 = pedidoController.buscarPedidoPorId(1L);
+//
+//        System.out.println(pedidoDTO1);
+
         ClienteApiResponseDto clienteApiResponseDto = getInfoCliente(criarPedidoDTO.idCliente());
         if(clienteApiResponseDto == null) {
             throw new ClienteNaoEncontradoException("Falha ao criar pedido! Cliente com ID: " + criarPedidoDTO.idCliente() + " não encontrado");
         }
 
+//        System.out.println(clienteApiResponseDto);
+
         Double valorTotalPedido = 0.0;
 
-        // Itera a lista de produtos e quantidades
         for (Map<String, Object> item : criarPedidoDTO.listaQtdProdutos()) {
             Long idProduto = Long.parseLong(item.get("idProduto").toString());
             // Pega os dados do produto pelo produto-service
@@ -68,8 +74,12 @@ public class OrquestradorCriacaoPedido {
             if(retorno == null) {
                 throw new EstoqueInsuficienteException("Estoque insuficiente, ou produto nao encontrado. ID do Produto: " + idProduto + " quantidade: " + item.get("quantidade"));
             }
+
+            System.out.println(retorno);
         }
 
+//        System.out.println(valorTotalPedido);
+//
         // Cria o pedido no banco de dados
         PedidoDTO pedidoDTO = pedidoController.criarPedido(criarPedidoDTO);
         log.info("Pedido " + pedidoDTO.idPedido() + " criado com sucesso! Prosseguindo para criaçao de ordem de pagamento");
@@ -82,10 +92,14 @@ public class OrquestradorCriacaoPedido {
                 valorTotalPedido,
                 StatusPagamento.EM_ABERTO
         );
+        System.out.println("CRIAÇÃO DO PAGAMENTO: "+ criarPagamentoDTO);
+
         PagamentoDTO pagamentoDTO = criarPagamento(criarPagamentoDTO);
         if(pagamentoDTO == null) {
             throw new OrdemPagamentoNaoEncontradaException("Erro ao gerar ordem de pagamento.");
         }
+
+        System.out.println("RESPOSTA DO PAGAMENTO: "+ pagamentoDTO);
 
 //         Atualiza o pedido no banco de dados para salvar o id do pagamento
         PedidoDTO pedidoComPagamento = new PedidoDTO(
@@ -130,7 +144,7 @@ public class OrquestradorCriacaoPedido {
     private final PagamentoDTO criarPagamento(CriarPagamentoDTO criarPagamentoDTO) {
         WebClient webClient = WebClient.create(pagamentoServiceUrl);
         return webClient.post()
-                .uri("/gerar/")
+                .uri("/pagamentos/gerar")
                 .bodyValue(criarPagamentoDTO)
                 .retrieve()
                 .bodyToMono(PagamentoDTO.class)
