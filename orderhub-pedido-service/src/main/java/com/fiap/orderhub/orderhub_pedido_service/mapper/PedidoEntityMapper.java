@@ -1,7 +1,6 @@
 package com.fiap.orderhub.orderhub_pedido_service.mapper;
 
 import br.com.orderhub.core.domain.entities.Pedido;
-import br.com.orderhub.core.domain.enums.StatusPedido;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoEntity;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoEntity;
 import org.springframework.stereotype.Component;
