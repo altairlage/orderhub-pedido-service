@@ -21,10 +21,10 @@ public class PedidoEntityMapper {
         }).toList();
     }
 
-    public static List<ItemPedidoEntity> mapListToItemEntityList(List<Map<String, Object>> itens) {
+    public static List<ItemPedidoEntity> mapListToItemEntityList(List<Map<String, Object>> itens, Long idPedido) {
         return itens.stream().map(map -> {
             ItemPedidoEntity entity = new ItemPedidoEntity();
-            entity.setId(new ItemPedidoId());
+            entity.setId(new ItemPedidoId((Long) map.get("idProduto"), idPedido));
             entity.setQuantidade((Integer) map.get("quantidade"));
             return entity;
         }).toList();
@@ -56,7 +56,7 @@ public class PedidoEntityMapper {
              pedido.getIdPedido(),
              pedido.getIdCliente(),
              pedido.getIdPagamento(),
-             mapListToItemEntityList(pedido.getListaQtdProdutos()),
+             mapListToItemEntityList(pedido.getListaQtdProdutos(), pedido.getIdPedido()),
              pedido.getStatus()
          );
      }
