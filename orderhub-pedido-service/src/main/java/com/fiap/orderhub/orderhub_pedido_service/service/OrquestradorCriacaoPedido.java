@@ -53,7 +53,7 @@ public class OrquestradorCriacaoPedido {
 
         // Itera a lista de produtos e quantidades
         for (Map<String, Object> item : criarPedidoDTO.listaQtdProdutos()) {
-            Long idProduto = (Long) item.get("idProduto");
+            Long idProduto = Long.parseLong(item.get("idProduto").toString());
             // Pega os dados do produto pelo produto-service
             ProdutoApiResponseDto produtoApiResponseDto = getInfoProduto(idProduto);
             if(produtoApiResponseDto == null) {
@@ -102,7 +102,7 @@ public class OrquestradorCriacaoPedido {
     private final EstoqueApiResponseDto baixarEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
         WebClient webClient = WebClient.create(estoqueServiceUrl);
         return webClient.post()
-                .uri("/api/estoques/" + idProduto + "/baixar")
+                .uri("/estoques/" + idProduto + "/baixar")
                 .bodyValue(estoqueApiRequestDto)
                 .retrieve()
                 .bodyToMono(EstoqueApiResponseDto.class)

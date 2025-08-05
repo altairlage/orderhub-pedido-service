@@ -54,7 +54,7 @@ public class OrquestradorAtualizacaoPedido {
     private final EstoqueApiResponseDto reporEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
         WebClient webClient = WebClient.create(estoqueServiceUrl);
         return webClient.post()
-                .uri("/api/estoques/" + idProduto + "/repor")
+                .uri("/estoques/" + idProduto + "/repor")
                 .bodyValue(estoqueApiRequestDto)
                 .retrieve()
                 .bodyToMono(EstoqueApiResponseDto.class)
