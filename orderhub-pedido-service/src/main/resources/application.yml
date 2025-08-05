@@ -1,0 +1,23 @@
+spring:
+  rabbitmq:
+      host: orderhub-rabbitmq
+      port: 5672
+      username: admin
+      password: admin
+  application:
+    name: orderhub-pedido-service
+
+orderhub:
+  queue:
+    pedido: orderhub-pedido-queue
+
+server:
+  port: 8080
+
+cliente:
+  service:
+    url: http://localhost:8081
+
+produto:
+  service:
+    url: http://localhost:8086
