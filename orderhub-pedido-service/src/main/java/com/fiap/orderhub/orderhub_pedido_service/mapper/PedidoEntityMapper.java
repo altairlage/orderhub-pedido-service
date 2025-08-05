@@ -3,61 +3,65 @@ package com.fiap.orderhub.orderhub_pedido_service.mapper;
 import br.com.orderhub.core.domain.entities.Pedido;
 import br.com.orderhub.core.domain.enums.StatusPedido;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoEntity;
-import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoId;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class PedidoEntityMapper {
+
+    // Converte lista de entidades de item para lista de mapas
     public static List<Map<String, Object>> itemEntityListToMapList(List<ItemPedidoEntity> itens) {
         return itens.stream().map(item -> {
             Map<String, Object> map = new java.util.HashMap<>();
-            map.put("idProduto", item.getId());
+            map.put("idProduto", item.getIdProduto()); // atualizado
             map.put("quantidade", item.getQuantidade());
             return map;
-        }).toList();
+        }).collect(Collectors.toList());
     }
 
-    public static List<ItemPedidoEntity> mapListToItemEntityList(List<Map<String, Object>> itens, Long idPedido) {
+    // Converte lista de mapas em lista de entidades de item
+    public static List<ItemPedidoEntity> mapListToItemEntityList(List<Map<String, Object>> itens) {
         return itens.stream().map(map -> {
             ItemPedidoEntity entity = new ItemPedidoEntity();
-            entity.setId(new ItemPedidoId((Long) map.get("idProduto"), idPedido));
+            entity.setIdProduto((Long) map.get("idProduto"));
             entity.setQuantidade((Integer) map.get("quantidade"));
             return entity;
-        }).toList();
+        }).collect(Collectors.toList());
     }
 
-    public static List<Pedido> mapListToPedidoList(List<PedidoEntity> itens) {
-        return itens.stream().map(map -> {
-            Pedido entity = new Pedido(map.getIdPedido(),
-                    map.getIdCliente(),
-                    map.getIdPagamento(),
-                    itemEntityListToMapList(map.getListaQtdProdutos()),
-                    map.getStatus());
-            return entity;
-        }).toList();
+    // Converte lista de PedidoEntity em lista de Pedido (domínio)
+    public static List<Pedido> mapListToPedidoList(List<PedidoEntity> pedidos) {
+        return pedidos.stream().map(PedidoEntityMapper::entityToDomain).collect(Collectors.toList());
     }
 
+    // Converte um PedidoEntity em Pedido (domínio)
     public static Pedido entityToDomain(PedidoEntity pedidoEntity) {
-         return new Pedido(
-             pedidoEntity.getIdPedido(),
-             pedidoEntity.getIdCliente(),
-             pedidoEntity.getIdPagamento(),
-             itemEntityListToMapList(pedidoEntity.getListaQtdProdutos()),
-             StatusPedido.valueOf(String.valueOf(pedidoEntity.getStatus()))
-         );
-     }
+        return new Pedido(
+                pedidoEntity.getIdPedido(),
+                pedidoEntity.getIdCliente(),
+                pedidoEntity.getIdPagamento(),
+                itemEntityListToMapList(pedidoEntity.getListaQtdProdutos()),
+                pedidoEntity.getStatus()
+        );
+    }
 
-     public static PedidoEntity domainToEntity(Pedido pedido) {
-         return new PedidoEntity(
-             pedido.getIdPedido(),
-             pedido.getIdCliente(),
-             pedido.getIdPagamento(),
-             mapListToItemEntityList(pedido.getListaQtdProdutos(), pedido.getIdPedido()),
-             pedido.getStatus()
-         );
-     }
+    // Converte um Pedido (domínio) em PedidoEntity
+    public static PedidoEntity domainToEntity(Pedido pedido) {
+        PedidoEntity entity = new PedidoEntity();
+        entity.setIdPedido(pedido.getIdPedido());
+        entity.setIdCliente(pedido.getIdCliente());
+        entity.setIdPagamento(pedido.getIdPagamento());
+        entity.setStatus(pedido.getStatus());
+
+        List<ItemPedidoEntity> itens = mapListToItemEntityList(pedido.getListaQtdProdutos());
+        // associar o pedido aos itens, se necessário
+        itens.forEach(item -> item.setPedido(entity));
+
+        entity.setListaQtdProdutos(itens);
+        return entity;
+    }
 }

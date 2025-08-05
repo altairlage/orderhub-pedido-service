@@ -3,23 +3,31 @@ package com.fiap.orderhub.orderhub_pedido_service.persistence;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
 @Entity
 @Table(name = "itens_pedido")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class ItemPedidoEntity {
 
-    @EmbeddedId
-    private ItemPedidoId id;
-
-    private Integer quantidade;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("pedidoId")
-    @JoinColumn(name = "pedido_id")
+    @JoinColumn(name = "pedido_id", nullable = false)
     private PedidoEntity pedido;
 
+    @Column(nullable = false)
+    private Long idProduto;
+
+    @Column(nullable = false)
+    private Integer quantidade;
+
+    public ItemPedidoEntity(PedidoEntity pedido, Long idProduto, Integer quantidade) {
+        this.pedido = pedido;
+        this.idProduto = idProduto;
+        this.quantidade = quantidade;
+    }
 }

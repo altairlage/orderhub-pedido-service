@@ -5,7 +5,6 @@ import br.com.orderhub.core.domain.enums.StatusPedido;
 import br.com.orderhub.core.interfaces.IPedidoGateway;
 import com.fiap.orderhub.orderhub_pedido_service.mapper.PedidoEntityMapper;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoEntity;
-import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoId;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoEntity;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoRepository;
 import lombok.AllArgsConstructor;
@@ -21,16 +20,12 @@ import java.util.Optional;
 public class PedidoGatewayImpl implements IPedidoGateway {
 
     private final PedidoRepository pedidoRepository;
-
     private final PedidoEntityMapper pedidoEntityMapper;
 
     @Override
     public Pedido buscarPorId(Long idPedido) {
         Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(idPedido.toString());
-        if (optionalPedido.isEmpty()) {
-            return null;
-        }
-        return PedidoEntityMapper.entityToDomain(optionalPedido.get());
+        return optionalPedido.map(PedidoEntityMapper::entityToDomain).orElse(null);
     }
 
     @Override
@@ -51,17 +46,25 @@ public class PedidoGatewayImpl implements IPedidoGateway {
         PedidoEntity entity = pedidoRepository.findById(pedidoAntigo.getIdPedido().toString())
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        // Atualize os campos necessários
+        // Atualiza os campos
         entity.setIdPagamento(pedidoAtualizado.getIdPagamento());
+        entity.setStatus(pedidoAtualizado.getStatus());
+
+        // Constrói nova lista de itens
         List<ItemPedidoEntity> itemPedidoEntities = new ArrayList<>();
         for (Map<String, Object> produto : pedidoAtualizado.getListaQtdProdutos()) {
             Long idProduto = (Long) produto.get("idProduto");
             Integer quantidade = (Integer) produto.get("quantidade");
 
-            itemPedidoEntities.add(new ItemPedidoEntity(new ItemPedidoId(pedidoAntigo.getIdPedido(), idProduto), quantidade, PedidoEntityMapper.domainToEntity(pedidoAtualizado)));
+            ItemPedidoEntity item = new ItemPedidoEntity();
+            item.setIdProduto(idProduto);
+            item.setQuantidade(quantidade);
+            item.setPedido(entity); // define o vínculo com o pedido
+
+            itemPedidoEntities.add(item);
         }
+
         entity.setListaQtdProdutos(itemPedidoEntities);
-        entity.setStatus(pedidoAtualizado.getStatus());
 
         PedidoEntity savedEntity = pedidoRepository.save(entity);
         return PedidoEntityMapper.entityToDomain(savedEntity);
@@ -82,11 +85,13 @@ public class PedidoGatewayImpl implements IPedidoGateway {
     @Override
     public List<Pedido> listarTodos() {
         List<PedidoEntity> pedidos = pedidoRepository.findAll();
-        for(PedidoEntity pedido : pedidos) {
-            if(pedido.getStatus() == StatusPedido.ABERTO) {
-                pedidos.add(pedido);
-            }
-        }
-        return pedidoEntityMapper.mapListToPedidoList(pedidos);
+
+        // ⚠️ A lógica abaixo causaria ConcurrentModificationException
+        // Substituído por filtro usando stream
+        List<PedidoEntity> abertos = pedidos.stream()
+                .filter(p -> p.getStatus() == StatusPedido.ABERTO)
+                .toList();
+
+        return pedidoEntityMapper.mapListToPedidoList(abertos);
     }
 }
