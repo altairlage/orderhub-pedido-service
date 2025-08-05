@@ -4,7 +4,8 @@ import br.com.orderhub.core.controller.PedidoController;
 import br.com.orderhub.core.domain.enums.StatusPagamento;
 import br.com.orderhub.core.domain.enums.StatusPedido;
 import br.com.orderhub.core.dto.pedidos.PedidoDTO;
-import com.fiap.orderhub.orderhub_pedido_service.dto.AtualizacaoStatusPeditoApiRequestDto;
+import br.com.orderhub.core.exceptions.EstoqueNaoEncontradoException;
+import com.fiap.orderhub.orderhub_pedido_service.dto.AtualizacaoStatusPedidoApiRequestDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiRequestDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiResponseDto;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class OrquestradorAtualizacaoPedido {
         this.pedidoController = pedidoController;
     }
 
-    public void atualizarStatusPedido(AtualizacaoStatusPeditoApiRequestDto atualizacaoPeditoApiRequestDto) {
+    public void atualizarStatusPedido(AtualizacaoStatusPedidoApiRequestDto atualizacaoPeditoApiRequestDto) {
         if(atualizacaoPeditoApiRequestDto.statusPagamento()== StatusPagamento.FECHADO_FALHA_PAGAMENTO) {
            PedidoDTO pedidoDTO = pedidoController.buscarPedidoPorId(atualizacaoPeditoApiRequestDto.idPedido());
 
@@ -35,11 +36,14 @@ public class OrquestradorAtualizacaoPedido {
                 if(retorno != null) {
                     log.info("Retornado ao estoque" + item.get("quantidade") + " itens do produto " + item.get("idProduto"));
                 } else {
-                    log.info("Erro ao retornar estoque do produto" + item.get("idProduto"));
+                    throw new EstoqueNaoEncontradoException("Erro ao retornar estoque do produto" + item.get("idProduto"));
                     // aqui poderiamos colocar o produto e quantidade em uma fila ou dead letter queue para ser tentado novamente mais tarde
                 }
             }
             pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SEM_CREDITO);
+        } else if(atualizacaoPeditoApiRequestDto.statusPagamento()== StatusPagamento.FECHADO_COM_SUCESSO) {
+            PedidoDTO pedidoDTO = pedidoController.buscarPedidoPorId(atualizacaoPeditoApiRequestDto.idPedido());
+            pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SUCESSO);
         }
     }
 

@@ -8,7 +8,7 @@ import br.com.orderhub.core.dto.pedidos.PedidoDTO;
 import br.com.orderhub.core.dto.pagamentos.CriarPagamentoDTO;
 import br.com.orderhub.core.exceptions.ClienteNaoEncontradoException;
 import br.com.orderhub.core.exceptions.EstoqueInsuficienteException;
-import br.com.orderhub.core.exceptions.PagamentoErroGeracaoException;
+import br.com.orderhub.core.exceptions.OrdemPagamentoNaoEncontradaException;
 import br.com.orderhub.core.exceptions.ProdutoNaoEncontradoException;
 import com.fiap.orderhub.orderhub_pedido_service.dto.ClienteApiResponseDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiRequestDto;
@@ -52,7 +52,7 @@ public class OrquestradorCriacaoPedido {
             // baixa do estoque cada produto na qtd pelo estoque-service
             EstoqueApiRequestDto estoqueApiRequestDto = new EstoqueApiRequestDto((Integer) item.get("quantidade"));
             EstoqueApiResponseDto retorno = baixarEstoque(idProduto, estoqueApiRequestDto);
-            if(retorno != null) {
+            if(retorno == null) {
                 throw new EstoqueInsuficienteException("Estoque insuficiente, ou produto nao encontrado. ID do Produto: " + idProduto + " quantidade: " + item.get("quantidade"));
             }
         }
@@ -63,25 +63,26 @@ public class OrquestradorCriacaoPedido {
 
         // Cria a ordem de pagamento pelo pagamento-sevice
         CriarPagamentoDTO criarPagamentoDTO = new CriarPagamentoDTO(
+                pedidoDTO.idPedido(),
                 clienteApiResponseDto.nome(),
                 clienteApiResponseDto.email(),
                 valorTotalPedido,
                 StatusPagamento.EM_ABERTO
         );
-        PagamentoDTO pagamentoDTO = criarPagamento(criarPagamentoDTO);
-        if(pagamentoDTO == null) {
-            throw new PagamentoErroGeracaoException("Erro ao gerar ordem de pagamento.");
-        }
+//        PagamentoDTO pagamentoDTO = criarPagamento(criarPagamentoDTO);
+//        if(pagamentoDTO == null) {
+//            throw new OrdemPagamentoNaoEncontradaException("Erro ao gerar ordem de pagamento.");
+//        }
 
         // Atualiza o pedido no banco de dados para salvar o id do pagamento
-        PedidoDTO pedidoComPagamento = new PedidoDTO(
-                pedidoDTO.idPedido(),
-                clienteApiResponseDto.id(),
-                pagamentoDTO.id(),
-                criarPedidoDTO.listaQtdProdutos(),
-                pedidoDTO.status()
-        );
-        pedidoController.editarPedido(pedidoComPagamento);
+//        PedidoDTO pedidoComPagamento = new PedidoDTO(
+//                pedidoDTO.idPedido(),
+//                clienteApiResponseDto.id(),
+//                pagamentoDTO.id(),
+//                criarPedidoDTO.listaQtdProdutos(),
+//                pedidoDTO.status()
+//        );
+//        pedidoController.editarPedido(pedidoComPagamento);
 
     }
 

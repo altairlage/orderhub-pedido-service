@@ -4,12 +4,16 @@ import br.com.orderhub.core.domain.entities.Pedido;
 import br.com.orderhub.core.domain.enums.StatusPedido;
 import br.com.orderhub.core.interfaces.IPedidoGateway;
 import com.fiap.orderhub.orderhub_pedido_service.mapper.PedidoEntityMapper;
+import com.fiap.orderhub.orderhub_pedido_service.persistence.ItemPedidoEntity;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoEntity;
 import com.fiap.orderhub.orderhub_pedido_service.persistence.PedidoRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -17,14 +21,21 @@ public class PedidoGatewayImpl implements IPedidoGateway {
 
     private final PedidoRepository pedidoRepository;
 
+    private final PedidoEntityMapper pedidoEntityMapper;
+
     @Override
     public Pedido buscarPorId(Long idPedido) {
-        return null;
+        Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(idPedido.toString());
+        if (optionalPedido.isEmpty()) {
+            return null;
+        }
+        return PedidoEntityMapper.entityToDomain(optionalPedido.get());
     }
 
     @Override
     public List<Pedido> buscarPorIdCliente(Long idCliente) {
-        return List.of();
+        List<PedidoEntity> pedidos = pedidoRepository.findByIdCliente(idCliente);
+        return pedidoEntityMapper.mapListToPedidoList(pedidos);
     }
 
     @Override
@@ -36,16 +47,45 @@ public class PedidoGatewayImpl implements IPedidoGateway {
 
     @Override
     public Pedido editar(Pedido pedidoAntigo, Pedido pedidoAtualizado) {
-        return null;
+        PedidoEntity entity = pedidoRepository.findById(pedidoAntigo.getIdPedido().toString())
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        // Atualize os campos necessários
+        entity.setIdPagamento(pedidoAtualizado.getIdPagamento());
+        List<ItemPedidoEntity> itemPedidoEntities = new ArrayList<>();
+        for (Map<String, Object> produto : pedidoAtualizado.getListaQtdProdutos()) {
+            Long idProduto = (Long) produto.get("idProduto");
+            Integer quantidade = (Integer) produto.get("quantidade");
+
+            itemPedidoEntities.add(new ItemPedidoEntity(idProduto, quantidade));
+        }
+        entity.setListaQtdProdutos(itemPedidoEntities);
+        entity.setStatus(pedidoAtualizado.getStatus());
+
+        PedidoEntity savedEntity = pedidoRepository.save(entity);
+        return PedidoEntityMapper.entityToDomain(savedEntity);
     }
 
     @Override
     public Pedido editarStatus(Long idPedido, StatusPedido status) {
-        return null;
+        Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(idPedido.toString());
+        if (optionalPedido.isEmpty()) {
+            return null;
+        }
+        PedidoEntity pedidoEntity = optionalPedido.get();
+        pedidoEntity.setStatus(status);
+        PedidoEntity updatedEntity = pedidoRepository.save(pedidoEntity);
+        return PedidoEntityMapper.entityToDomain(updatedEntity);
     }
 
     @Override
     public List<Pedido> listarTodos() {
-        return List.of();
+        List<PedidoEntity> pedidos = pedidoRepository.findAll();
+        for(PedidoEntity pedido : pedidos) {
+            if(pedido.getStatus() == StatusPedido.ABERTO) {
+                pedidos.add(pedido);
+            }
+        }
+        return pedidoEntityMapper.mapListToPedidoList(pedidos);
     }
 }
