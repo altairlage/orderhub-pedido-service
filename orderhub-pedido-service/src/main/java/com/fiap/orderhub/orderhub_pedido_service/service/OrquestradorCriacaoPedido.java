@@ -43,18 +43,10 @@ public class OrquestradorCriacaoPedido {
     }
 
     public void criarPedido(CriarPedidoDTO criarPedidoDTO) {
-//        PedidoDTO pedidoDTO = pedidoController.criarPedido(criarPedidoDTO);
-//
-//        PedidoDTO pedidoDTO1 = pedidoController.buscarPedidoPorId(1L);
-//
-//        System.out.println(pedidoDTO1);
-
         ClienteApiResponseDto clienteApiResponseDto = getInfoCliente(criarPedidoDTO.idCliente());
         if(clienteApiResponseDto == null) {
             throw new ClienteNaoEncontradoException("Falha ao criar pedido! Cliente com ID: " + criarPedidoDTO.idCliente() + " não encontrado");
         }
-
-//        System.out.println(clienteApiResponseDto);
 
         Double valorTotalPedido = 0.0;
 
@@ -77,8 +69,6 @@ public class OrquestradorCriacaoPedido {
 
             System.out.println(retorno);
         }
-
-//        System.out.println(valorTotalPedido);
 //
         // Cria o pedido no banco de dados
         PedidoDTO pedidoDTO = pedidoController.criarPedido(criarPedidoDTO);

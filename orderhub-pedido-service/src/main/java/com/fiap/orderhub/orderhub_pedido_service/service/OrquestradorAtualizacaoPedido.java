@@ -53,13 +53,13 @@ public class OrquestradorAtualizacaoPedido {
         return response;
     }
 
-    private final EstoqueApiResponseDto reporEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
+    public final EstoqueApiResponseDto reporEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
         WebClient webClient = WebClient.create(estoqueServiceUrl);
         return webClient.post()
                 .uri("/estoques/" + idProduto + "/repor")
                 .bodyValue(estoqueApiRequestDto)
                 .retrieve()
                 .bodyToMono(EstoqueApiResponseDto.class)
-                .block(); // para nao ter que usar o tipo Mono<Estoque>
+                .block();
     }
 }

@@ -51,11 +51,9 @@ public class PedidoGatewayImpl implements IPedidoGateway {
         PedidoEntity entity = pedidoRepository.findById(pedidoAntigo.getIdPedido().toString())
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        // Atualiza os campos
         entity.setIdPagamento(pedidoAtualizado.getIdPagamento());
         entity.setStatus(pedidoAtualizado.getStatus());
 
-        // Constrói nova lista de itens
         List<ItemPedidoEntity> itemPedidoEntities = new ArrayList<>();
         for (Map<String, Object> produto : pedidoAtualizado.getListaQtdProdutos()) {
             Long idProduto = Long.parseLong(produto.get("idProduto").toString());
@@ -64,8 +62,7 @@ public class PedidoGatewayImpl implements IPedidoGateway {
             ItemPedidoEntity item = new ItemPedidoEntity();
             item.setIdProduto(idProduto);
             item.setQuantidade(quantidade);
-            item.setPedido(entity); // define o vínculo com o pedido
-
+            item.setPedido(entity);
             itemPedidoEntities.add(item);
         }
 
@@ -91,8 +88,6 @@ public class PedidoGatewayImpl implements IPedidoGateway {
     public List<Pedido> listarTodos() {
         List<PedidoEntity> pedidos = pedidoRepository.findAll();
 
-        // ⚠️ A lógica abaixo causaria ConcurrentModificationException
-        // Substituído por filtro usando stream
         List<PedidoEntity> abertos = pedidos.stream()
                 .filter(p -> p.getStatus() == StatusPedido.ABERTO)
                 .toList();
