@@ -41,8 +41,8 @@ class PedidoEntityMapperTest {
         List<ItemPedidoEntity> result = PedidoEntityMapper.mapListToItemEntityList(maps);
 
         assertEquals(1, result.size());
-        assertEquals(20L, result.get(0).getIdProduto());
-        assertEquals(5, result.get(0).getQuantidade());
+        assertEquals(20L, result.getFirst().getIdProduto());
+        assertEquals(5, result.getFirst().getQuantidade());
     }
 
     @Test

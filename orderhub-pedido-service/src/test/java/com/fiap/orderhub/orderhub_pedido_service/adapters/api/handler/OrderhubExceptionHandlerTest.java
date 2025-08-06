@@ -1,7 +1,6 @@
 package com.fiap.orderhub.orderhub_pedido_service.adapters.api.handler;
 
 import br.com.orderhub.core.exceptions.*;
-import com.fiap.orderhub.orderhub_pedido_service.adapters.api.handler.OrderhubExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
