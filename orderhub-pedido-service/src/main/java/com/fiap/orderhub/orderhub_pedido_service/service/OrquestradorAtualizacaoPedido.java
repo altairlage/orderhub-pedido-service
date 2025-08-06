@@ -9,6 +9,7 @@ import com.fiap.orderhub.orderhub_pedido_service.dto.AtualizacaoStatusPedidoApiR
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiRequestDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiResponseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -20,11 +21,15 @@ public class OrquestradorAtualizacaoPedido {
 
     private final PedidoController pedidoController;
 
+    @Value("${estoque.service.url}")
+    private String estoqueServiceUrl;
+
     public OrquestradorAtualizacaoPedido(PedidoController pedidoController) {
         this.pedidoController = pedidoController;
     }
 
-    public void atualizarStatusPedido(AtualizacaoStatusPedidoApiRequestDto atualizacaoPeditoApiRequestDto) {
+    public PedidoDTO atualizarStatusPedido(AtualizacaoStatusPedidoApiRequestDto atualizacaoPeditoApiRequestDto) {
+        PedidoDTO response = null;
         if(atualizacaoPeditoApiRequestDto.statusPagamento()== StatusPagamento.FECHADO_FALHA_PAGAMENTO) {
            PedidoDTO pedidoDTO = pedidoController.buscarPedidoPorId(atualizacaoPeditoApiRequestDto.idPedido());
 
@@ -40,20 +45,21 @@ public class OrquestradorAtualizacaoPedido {
                     // aqui poderiamos colocar o produto e quantidade em uma fila ou dead letter queue para ser tentado novamente mais tarde
                 }
             }
-            pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SEM_CREDITO);
+            response = pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SEM_CREDITO);
         } else if(atualizacaoPeditoApiRequestDto.statusPagamento()== StatusPagamento.FECHADO_COM_SUCESSO) {
             PedidoDTO pedidoDTO = pedidoController.buscarPedidoPorId(atualizacaoPeditoApiRequestDto.idPedido());
-            pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SUCESSO);
+            response=  pedidoController.editarPedidoStatus(pedidoDTO.idPedido(), StatusPedido.FECHADO_SUCESSO);
         }
+        return response;
     }
 
-    private final EstoqueApiResponseDto reporEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+    public final EstoqueApiResponseDto reporEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
+        WebClient webClient = WebClient.create(estoqueServiceUrl);
         return webClient.post()
-                .uri("/api/estoques/" + idProduto + "/repor")
+                .uri("/estoques/" + idProduto + "/repor")
                 .bodyValue(estoqueApiRequestDto)
                 .retrieve()
                 .bodyToMono(EstoqueApiResponseDto.class)
-                .block(); // para nao ter que usar o tipo Mono<Estoque>
+                .block();
     }
 }

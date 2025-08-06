@@ -21,28 +21,29 @@ public class PedidoGatewayImpl implements IPedidoGateway {
 
     private final PedidoRepository pedidoRepository;
 
-    private final PedidoEntityMapper pedidoEntityMapper;
-
     @Override
     public Pedido buscarPorId(Long idPedido) {
         Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(idPedido.toString());
-        if (optionalPedido.isEmpty()) {
+        if(optionalPedido.isEmpty()) {
             return null;
         }
-        return PedidoEntityMapper.entityToDomain(optionalPedido.get());
+
+        PedidoEntity pedidoEntity = optionalPedido.get();
+
+        return optionalPedido.map(PedidoEntityMapper::entityToDomain).orElse(null);
     }
 
     @Override
     public List<Pedido> buscarPorIdCliente(Long idCliente) {
         List<PedidoEntity> pedidos = pedidoRepository.findByIdCliente(idCliente);
-        return pedidoEntityMapper.mapListToPedidoList(pedidos);
+        return PedidoEntityMapper.mapListToPedidoList(pedidos);
     }
 
     @Override
     public Pedido criar(Pedido pedido) {
         PedidoEntity pedidoEntity = PedidoEntityMapper.domainToEntity(pedido);
         PedidoEntity savedEntity = pedidoRepository.save(pedidoEntity);
-        return PedidoEntityMapper.entityToDomain(savedEntity);
+        return PedidoEntityMapper.entityToDomainCreation(savedEntity);
     }
 
     @Override
@@ -50,17 +51,22 @@ public class PedidoGatewayImpl implements IPedidoGateway {
         PedidoEntity entity = pedidoRepository.findById(pedidoAntigo.getIdPedido().toString())
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        // Atualize os campos necessários
         entity.setIdPagamento(pedidoAtualizado.getIdPagamento());
+        entity.setStatus(pedidoAtualizado.getStatus());
+
         List<ItemPedidoEntity> itemPedidoEntities = new ArrayList<>();
         for (Map<String, Object> produto : pedidoAtualizado.getListaQtdProdutos()) {
-            Long idProduto = (Long) produto.get("idProduto");
+            Long idProduto = Long.parseLong(produto.get("idProduto").toString());
             Integer quantidade = (Integer) produto.get("quantidade");
 
-            itemPedidoEntities.add(new ItemPedidoEntity(idProduto, quantidade));
+            ItemPedidoEntity item = new ItemPedidoEntity();
+            item.setIdProduto(idProduto);
+            item.setQuantidade(quantidade);
+            item.setPedido(entity);
+            itemPedidoEntities.add(item);
         }
+
         entity.setListaQtdProdutos(itemPedidoEntities);
-        entity.setStatus(pedidoAtualizado.getStatus());
 
         PedidoEntity savedEntity = pedidoRepository.save(entity);
         return PedidoEntityMapper.entityToDomain(savedEntity);
@@ -81,11 +87,11 @@ public class PedidoGatewayImpl implements IPedidoGateway {
     @Override
     public List<Pedido> listarTodos() {
         List<PedidoEntity> pedidos = pedidoRepository.findAll();
-        for(PedidoEntity pedido : pedidos) {
-            if(pedido.getStatus() == StatusPedido.ABERTO) {
-                pedidos.add(pedido);
-            }
-        }
-        return pedidoEntityMapper.mapListToPedidoList(pedidos);
+
+        List<PedidoEntity> abertos = pedidos.stream()
+                .filter(p -> p.getStatus() == StatusPedido.ABERTO)
+                .toList();
+
+        return PedidoEntityMapper.mapListToPedidoList(abertos);
     }
 }

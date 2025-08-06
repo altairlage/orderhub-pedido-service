@@ -10,22 +10,24 @@ import lombok.Setter;
 import java.util.List;
 
 @Entity
+@Table(name = "pedidos")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "pedidos")
 public class PedidoEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idPedido;
+
     @Column(nullable = false)
     private Long idCliente;
-    private Long IdPagamento;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pedido_id")
+    private Long idPagamento;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ItemPedidoEntity> listaQtdProdutos;
 
-    private StatusPedido status = null;
+    private StatusPedido status;
 }

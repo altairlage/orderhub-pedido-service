@@ -15,6 +15,7 @@ import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiRequestDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.EstoqueApiResponseDto;
 import com.fiap.orderhub.orderhub_pedido_service.dto.ProdutoApiResponseDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -25,12 +26,23 @@ import java.util.Map;
 public class OrquestradorCriacaoPedido {
     private final PedidoController pedidoController;
 
+    @Value("${estoque.service.url}")
+    private String estoqueServiceUrl;
+
+    @Value("${cliente.service.url}")
+    private String clienteServiceUrl;
+
+    @Value("${pagamento.service.url}")
+    private String pagamentoServiceUrl;
+
+    @Value("${produto.service.url}")
+    private String produtoServiceUrl;
+
     public OrquestradorCriacaoPedido(PedidoController pedidoController) {
         this.pedidoController = pedidoController;
     }
 
     public void criarPedido(CriarPedidoDTO criarPedidoDTO) {
-        // Pega os dados do cliente pelo cliente-service
         ClienteApiResponseDto clienteApiResponseDto = getInfoCliente(criarPedidoDTO.idCliente());
         if(clienteApiResponseDto == null) {
             throw new ClienteNaoEncontradoException("Falha ao criar pedido! Cliente com ID: " + criarPedidoDTO.idCliente() + " não encontrado");
@@ -38,9 +50,8 @@ public class OrquestradorCriacaoPedido {
 
         Double valorTotalPedido = 0.0;
 
-        // Itera a lista de produtos e quantidades
         for (Map<String, Object> item : criarPedidoDTO.listaQtdProdutos()) {
-            Long idProduto = (Long) item.get("idProduto");
+            Long idProduto = Long.parseLong(item.get("idProduto").toString());
             // Pega os dados do produto pelo produto-service
             ProdutoApiResponseDto produtoApiResponseDto = getInfoProduto(idProduto);
             if(produtoApiResponseDto == null) {
@@ -55,8 +66,10 @@ public class OrquestradorCriacaoPedido {
             if(retorno == null) {
                 throw new EstoqueInsuficienteException("Estoque insuficiente, ou produto nao encontrado. ID do Produto: " + idProduto + " quantidade: " + item.get("quantidade"));
             }
-        }
 
+            System.out.println(retorno);
+        }
+//
         // Cria o pedido no banco de dados
         PedidoDTO pedidoDTO = pedidoController.criarPedido(criarPedidoDTO);
         log.info("Pedido " + pedidoDTO.idPedido() + " criado com sucesso! Prosseguindo para criaçao de ordem de pagamento");
@@ -69,27 +82,31 @@ public class OrquestradorCriacaoPedido {
                 valorTotalPedido,
                 StatusPagamento.EM_ABERTO
         );
-//        PagamentoDTO pagamentoDTO = criarPagamento(criarPagamentoDTO);
-//        if(pagamentoDTO == null) {
-//            throw new OrdemPagamentoNaoEncontradaException("Erro ao gerar ordem de pagamento.");
-//        }
+        System.out.println("CRIAÇÃO DO PAGAMENTO: "+ criarPagamentoDTO);
 
-        // Atualiza o pedido no banco de dados para salvar o id do pagamento
-//        PedidoDTO pedidoComPagamento = new PedidoDTO(
-//                pedidoDTO.idPedido(),
-//                clienteApiResponseDto.id(),
-//                pagamentoDTO.id(),
-//                criarPedidoDTO.listaQtdProdutos(),
-//                pedidoDTO.status()
-//        );
-//        pedidoController.editarPedido(pedidoComPagamento);
+        PagamentoDTO pagamentoDTO = criarPagamento(criarPagamentoDTO);
+        if(pagamentoDTO == null) {
+            throw new OrdemPagamentoNaoEncontradaException("Erro ao gerar ordem de pagamento.");
+        }
+
+        System.out.println("RESPOSTA DO PAGAMENTO: "+ pagamentoDTO);
+
+//         Atualiza o pedido no banco de dados para salvar o id do pagamento
+        PedidoDTO pedidoComPagamento = new PedidoDTO(
+                pedidoDTO.idPedido(),
+                clienteApiResponseDto.id(),
+                pagamentoDTO.id(),
+                criarPedidoDTO.listaQtdProdutos(),
+                pedidoDTO.status()
+        );
+        pedidoController.editarPedido(pedidoComPagamento);
 
     }
 
     private final EstoqueApiResponseDto baixarEstoque(Long idProduto, EstoqueApiRequestDto estoqueApiRequestDto) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(estoqueServiceUrl);
         return webClient.post()
-                .uri("/api/estoques/" + idProduto + "/baixar")
+                .uri("/estoques/" + idProduto + "/baixar")
                 .bodyValue(estoqueApiRequestDto)
                 .retrieve()
                 .bodyToMono(EstoqueApiResponseDto.class)
@@ -97,7 +114,7 @@ public class OrquestradorCriacaoPedido {
     }
 
     private final ClienteApiResponseDto getInfoCliente(Long idCliente) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(clienteServiceUrl);
         return webClient.get()
                 .uri("/clientes/id/" + idCliente)
                 .retrieve()
@@ -106,7 +123,7 @@ public class OrquestradorCriacaoPedido {
     }
 
     private final ProdutoApiResponseDto getInfoProduto(Long idProduto) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(produtoServiceUrl);
         return webClient.get()
                 .uri("/produtos/" + idProduto)
                 .retrieve()
@@ -115,9 +132,9 @@ public class OrquestradorCriacaoPedido {
     }
 
     private final PagamentoDTO criarPagamento(CriarPagamentoDTO criarPagamentoDTO) {
-        WebClient webClient = WebClient.create("http://localhost:8080");
+        WebClient webClient = WebClient.create(pagamentoServiceUrl);
         return webClient.post()
-                .uri("/gerar/")
+                .uri("/pagamentos/gerar")
                 .bodyValue(criarPagamentoDTO)
                 .retrieve()
                 .bodyToMono(PagamentoDTO.class)
